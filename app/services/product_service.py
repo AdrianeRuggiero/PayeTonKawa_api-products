@@ -1,15 +1,18 @@
-from app.db.database import collection
+"""
+Service functions for managing products in the database.
+"""
+
+from app.db.database import products_collection as collection
 from app.models.product import ProductModel
 
-async def list_products():
+def list_products():
     """
     Récupère tous les produits de la base de données.
     Returns:
         List[ProductModel]: Liste des produits.
     """
-    products = []
-    async for product in collection.find():
-        products.append(ProductModel(**product))
+    cursor = collection.find({})
+    products = [ProductModel(**product) for product in cursor]
     return products
 
 async def create_product(product: ProductModel):
@@ -20,7 +23,7 @@ async def create_product(product: ProductModel):
     Returns:
         ProductModel: Le produit créé avec son ID.
     """
-    data = product.dict(by_alias=True)
+    data = product.model_dump(by_alias=True)
     last = await collection.find_one(sort=[("_id", -1)])
     next_id = (last["_id"] + 1) if last else 1
     data["_id"] = next_id
@@ -48,7 +51,7 @@ async def update_product(product_id: int, updated: ProductModel):
     Returns:
         ProductModel: Le produit mis à jour, ou None si non trouvé.
     """
-    data = updated.dict(by_alias=True, exclude={"productId"})
+    data = updated.model_dump(by_alias=True, exclude={"productId"})
     result = await collection.update_one({"_id": product_id}, {"$set": data})
     if result.matched_count == 0:
         return None
