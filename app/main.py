@@ -13,4 +13,4 @@ from app.routes import products, token
 app = FastAPI()
 
 app.include_router(token.router)
-app.include_router(products.router, prefix="/products", tags=["products"])
+app.include_router(products.router, prefix="/products")
